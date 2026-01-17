@@ -1,11 +1,15 @@
 from src.infrastructure.repositories.interfaces import (
     IOutboxRepository,
     IProcessedMessagesModelRepository,
+    IProductRepository,
+    IStockRepository,
 )
 from src.infrastructure.repositories.outbox_repository import OutboxRepository
 from src.infrastructure.repositories.processed_message_repository import (
     ProcessedMessagesModelRepository,
 )
+from src.infrastructure.repositories.product_repository import ProductRepository
+from src.infrastructure.repositories.stock_repository import StockRepository
 from src.infrastructure.session import async_session
 from src.infrastructure.uow.interfaces import IUnitOfWork
 
@@ -36,6 +40,14 @@ class UnitOfWork(IUnitOfWork):
     @property
     def processed_messages(self) -> IProcessedMessagesModelRepository:
         return ProcessedMessagesModelRepository(self.__session)
+
+    @property
+    def stocks(self) -> IStockRepository:
+        return StockRepository(self.__session)
+
+    @property
+    def products(self) -> IProductRepository:
+        return ProductRepository(self.__session)
 
 
 def get_uow() -> IUnitOfWork:
