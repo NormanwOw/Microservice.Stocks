@@ -3,7 +3,8 @@ from typing import Any, TypeVar
 
 from sqlalchemy.orm import InstrumentedAttribute
 
-from src.infrastructure.models import Base
+from src.infrastructure.models import Base, StocksModel
+from src.presentation.pagination import Pagination
 
 T = TypeVar('T', bound=Base)
 
@@ -15,10 +16,7 @@ class ISQLAlchemyRepository(ABC):
 
     @abstractmethod
     async def find_all(
-        self,
-        filter_field: InstrumentedAttribute = None,
-        filter_value: Any = None,
-        order_by: InstrumentedAttribute = None,
+        self, order_by: InstrumentedAttribute = None, pagination: Pagination = None
     ) -> list[T]:
         raise NotImplementedError
 
@@ -55,4 +53,7 @@ class IProcessedMessagesModelRepository(ISQLAlchemyRepository, ABC): ...
 class IProductRepository(ISQLAlchemyRepository, ABC): ...
 
 
-class IStockRepository(ISQLAlchemyRepository, ABC): ...
+class IStockRepository(ISQLAlchemyRepository, ABC):
+    @abstractmethod
+    async def find_available(self, pagination: Pagination) -> list[StocksModel]:
+        raise NotImplementedError
