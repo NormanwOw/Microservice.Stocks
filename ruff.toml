@@ -1,0 +1,15 @@
+line-length = 100
+[lint]
+select = [
+    "E",
+    "F",
+    "I",
+    "T20",
+]
+
+ignore = []
+
+exclude = ["__init__.py"]
+
+[format]
+quote-style = "single"
