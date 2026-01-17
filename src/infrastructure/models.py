@@ -1,10 +1,13 @@
 import uuid
 from datetime import datetime, timezone
+from decimal import Decimal
 from typing import Optional
 
-from sqlalchemy import UUID, DateTime, ForeignKey
+from sqlalchemy import UUID, DateTime, Enum, ForeignKey, Numeric
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+from src.domain.enums import Currency
 
 
 class Base(DeclarativeBase):
@@ -26,6 +29,12 @@ class ProductsModel(Base, CUModel):
     __tablename__ = 'products'
 
     name: Mapped[str] = mapped_column(nullable=False)
+    price: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
+    currency: Mapped[Currency] = mapped_column(
+        Enum(Currency, name='currency_enum', native_enum=True, create_type=True),
+        nullable=False,
+        default=Currency.USD,
+    )
 
 
 class StocksModel(Base, CUModel):
