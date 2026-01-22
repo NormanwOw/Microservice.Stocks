@@ -6,6 +6,7 @@ from sqlalchemy.orm import InstrumentedAttribute
 
 from src.infrastructure.models import Base
 from src.infrastructure.repositories.interfaces import ISQLAlchemyRepository
+from src.presentation.pagination import Pagination
 
 T = TypeVar('T', bound=Base)
 
@@ -22,22 +23,16 @@ class SQLAlchemyRepository(ISQLAlchemyRepository):
 
     async def find_all(
         self,
-        filter_field: InstrumentedAttribute = None,
-        filter_value: Any = None,
-        order_by: InstrumentedAttribute = None,
+        order_by: InstrumentedAttribute | None = None,
+        pagination: Pagination | None = None,
     ) -> list[T]:
-        if not filter_field or not filter_value:
-            if order_by:
-                res = await self.session.execute(select(self.model).order_by(desc(order_by)))
-            else:
-                res = await self.session.execute(select(self.model))
-            return res.scalars().all()
-
-        if order_by:
-            query = select(self.model).where(filter_field == filter_value).order_by(desc(order_by))
-        else:
-            query = select(self.model).where(filter_field == filter_value)
-        res = await self.session.execute(query)
+        if pagination is None:
+            pagination = Pagination()
+        stmt = select(self.model)
+        if order_by is not None:
+            stmt = stmt.order_by(desc(order_by))
+        stmt = stmt.limit(pagination.limit).offset(pagination.offset)
+        res = await self.session.execute(stmt)
         return res.scalars().all()
 
     async def find_one(
