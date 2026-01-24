@@ -19,7 +19,7 @@ from src.presentation.routers.product_router import router as product_router
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     logger.info('Start app...')
-    asyncio.create_task(KafkaMessageRouter(get_uow(), KafkaConsumer(settings)).run())
+    asyncio.create_task(KafkaMessageRouter(get_uow(), KafkaConsumer(settings), logger).run())
     yield
     logger.info('App shutdown')
 
