@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     KAFKA_HOSTS: list[str]
 
     STOCKS_COMMANDS_TOPIC: str
+    SAGA_EVENTS_TOPIC: str
 
 
 settings = Settings()
