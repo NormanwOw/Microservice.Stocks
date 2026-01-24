@@ -3,9 +3,10 @@ import json
 from aiokafka import AIOKafkaConsumer
 
 from src.config import Settings
+from src.infrastructure.messaging.interfaces import IKafkaConsumer
 
 
-class KafkaConsumer(AIOKafkaConsumer):
+class KafkaConsumer(IKafkaConsumer, AIOKafkaConsumer):
     def __init__(self, settings: Settings):
         super().__init__(
             settings.STOCKS_COMMANDS_TOPIC,
