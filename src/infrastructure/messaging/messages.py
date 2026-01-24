@@ -1,11 +1,38 @@
+from datetime import datetime
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from src.domain.base import PydanticBase
+from src.domain.entities import Product
+from src.domain.enums import AggregateType, CommandType, EventType
 
 
-class Message(BaseModel):
+class Message(PydanticBase):
     message_id: UUID = Field(default_factory=uuid4)
+    producer: str
+    sent_at: datetime | None = None
+
+
+class ExternalReference(PydanticBase):
+    id: UUID
+    type: AggregateType
+    version: int
 
 
 class EventMessage(Message):
-    event_type: str
+    event_type: EventType
+    external_reference: ExternalReference
+
+
+class CommandMessage(Message):
+    command_type: CommandType
+    external_reference: ExternalReference
+
+
+class ReserveProductsPayload(PydanticBase):
+    products: list[Product]
+
+
+class ReserveProductsMessage(CommandMessage):
+    payload: ReserveProductsPayload
