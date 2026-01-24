@@ -5,6 +5,7 @@ from tenacity import AsyncRetrying, RetryError, stop_after_attempt, wait_fixed
 
 from src.application.dispatcher import dispatcher
 from src.infrastructure.logger.impl import logger
+from src.infrastructure.logger.interfaces import ILogger
 from src.infrastructure.messaging.interfaces import IKafkaConsumer
 from src.infrastructure.messaging.messages import CommandMessage
 from src.infrastructure.models import ProcessedMessagesModel
@@ -12,9 +13,10 @@ from src.infrastructure.uow.interfaces import IUnitOfWork
 
 
 class KafkaMessageRouter:
-    def __init__(self, uow: IUnitOfWork, consumer: IKafkaConsumer):
+    def __init__(self, uow: IUnitOfWork, consumer: IKafkaConsumer, logger: ILogger):
         self.uow = uow
         self.consumer = consumer
+        self.logger = logger
 
     async def run(self):
         await self.consumer.start()
@@ -30,6 +32,9 @@ class KafkaMessageRouter:
                             )
                         except IntegrityError:
                             await self.consumer.commit()
+                            self.logger.info(
+                                f'Skipped already processed message ' f'{message_schema.message_id}'
+                            )
                             continue
 
                         try:
