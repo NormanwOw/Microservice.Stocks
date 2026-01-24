@@ -3,6 +3,7 @@ from typing import Any, TypeVar
 
 from sqlalchemy.orm import InstrumentedAttribute
 
+from src.domain.entities import Product
 from src.infrastructure.models import Base, StocksModel
 from src.presentation.pagination import Pagination
 
@@ -56,4 +57,10 @@ class IProductRepository(ISQLAlchemyRepository, ABC): ...
 class IStockRepository(ISQLAlchemyRepository, ABC):
     @abstractmethod
     async def find_available(self, pagination: Pagination) -> list[StocksModel]:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def find(
+        self, products: list[Product], with_for_update: bool = False
+    ) -> list[StocksModel]:
         raise NotImplementedError
