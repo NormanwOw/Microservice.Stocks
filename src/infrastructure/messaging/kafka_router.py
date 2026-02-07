@@ -23,7 +23,7 @@ class KafkaMessageRouter:
         try:
             while True:
                 async for msg in self.consumer:
-                    message_schema = CommandMessage(**msg.value, command_type=msg.value['action'])
+                    message_schema = CommandMessage(**msg.value)
 
                     async with self.uow:
                         try:
