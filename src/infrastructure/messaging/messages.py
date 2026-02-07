@@ -21,12 +21,12 @@ class ExternalReference(PydanticBase):
 
 
 class EventMessage(Message):
-    event_type: EventType
+    action: EventType
     external_reference: ExternalReference
 
 
 class CommandMessage(Message):
-    command_type: CommandType
+    action: CommandType
     external_reference: ExternalReference
 
 

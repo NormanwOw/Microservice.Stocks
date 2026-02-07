@@ -15,18 +15,18 @@ class BrokerDispatcher:
         self.handlers: Dict[str, Callable[[dict], Awaitable[None]]] = {}
         self.logger = logger
 
-    def register(self, command_type: str):
+    def register(self, action: str):
         def wrapper(func):
-            self.handlers[command_type] = func
+            self.handlers[action] = func
             return func
 
         return wrapper
 
-    async def dispatch(self, uow: IUnitOfWork, command_type, message: dict):
+    async def dispatch(self, uow: IUnitOfWork, action, message: dict):
         try:
-            handler = self.handlers[command_type]
+            handler = self.handlers[action]
         except KeyError:
-            logger.error(f'Handler for command {command_type} didnt registered', exc_info=False)
+            logger.error(f'Handler for action {action} didnt registered', exc_info=False)
             os.kill(os.getpid(), signal.SIGINT)
         kwargs = await resolve_dependencies(
             handler,
