@@ -26,7 +26,7 @@ class EventMessage(Message):
 
 
 class CommandMessage(Message):
-    command_type: CommandType
+    action: CommandType
     external_reference: ExternalReference
 
 

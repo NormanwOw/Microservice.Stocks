@@ -44,7 +44,7 @@ class KafkaMessageRouter:
                                 with attempt:
                                     await dispatcher.dispatch(
                                         uow=self.uow,
-                                        action=message_schema.command_type,
+                                        action=message_schema.action,
                                         message=msg.value,
                                     )
                                     await self.uow.commit()
