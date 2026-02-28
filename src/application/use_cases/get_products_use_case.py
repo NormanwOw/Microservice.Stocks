@@ -9,5 +9,5 @@ class GetProducts:
 
     async def __call__(self, pagination: Pagination) -> list[Product]:
         async with self.uow:
-            stocks = await self.uow.stocks.find_available(pagination=pagination)
+            stocks = await self.uow.stocks.find(pagination=pagination)
             return [stock.to_product() for stock in stocks]
