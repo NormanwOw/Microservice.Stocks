@@ -27,11 +27,37 @@ class OrderServiceProxy(IOrderService):
         )
         await uow.outbox.add(for_outbox)
 
+    async def products_committed(
+        self, uow: IUnitOfWork, products: list[Product], external_reference: ExternalReference
+    ):
+        for_outbox = OutboxModel(
+            action=EventType.PRODUCTS_COMMITTED,
+            topic=self.topic,
+            payload={
+                'products': [product.to_dict() for product in products],
+            },
+            external_reference=external_reference.to_dict(),
+            producer=self.producer,
+        )
+        await uow.outbox.add(for_outbox)
+
     async def reserve_failed(
         self, uow: IUnitOfWork, error_message: str, external_reference: ExternalReference
     ):
         for_outbox = OutboxModel(
             action=EventType.RESERVE_FAILED,
+            topic=self.topic,
+            payload={'error_message': error_message},
+            external_reference=external_reference.to_dict(),
+            producer=self.producer,
+        )
+        await uow.outbox.add(for_outbox)
+
+    async def commit_failed(
+        self, uow: IUnitOfWork, error_message: str, external_reference: ExternalReference
+    ):
+        for_outbox = OutboxModel(
+            action=EventType.COMMIT_FAILED,
             topic=self.topic,
             payload={'error_message': error_message},
             external_reference=external_reference.to_dict(),

@@ -1,3 +1,5 @@
+from src.application.use_cases.add_products import AddProducts
+from src.application.use_cases.commit_products_use_case import CommitProducts
 from src.application.use_cases.get_products_use_case import GetProducts
 from src.application.use_cases.reserve_products_use_case import (
     ReserveProducts,
@@ -16,5 +18,13 @@ class ProductDependencies:
         return GetProducts(get_uow())
 
     @classmethod
+    async def add_products(cls):
+        return AddProducts(get_uow())
+
+    @classmethod
     async def reserve_products(cls):
         return ReserveProducts(cls.order_service_proxy, logger)
+
+    @classmethod
+    async def commit_products(cls):
+        return CommitProducts(cls.order_service_proxy, logger)

@@ -56,11 +56,17 @@ class IProductRepository(ISQLAlchemyRepository, ABC): ...
 
 class IStockRepository(ISQLAlchemyRepository, ABC):
     @abstractmethod
-    async def find_available(self, pagination: Pagination) -> list[StocksModel]:
+    async def find(self, pagination: Pagination) -> list[StocksModel]:
         raise NotImplementedError
 
     @abstractmethod
-    async def find(
+    async def find_available(
+        self, products: list[Product], with_for_update: bool = False
+    ) -> list[StocksModel]:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def find_total(
         self, products: list[Product], with_for_update: bool = False
     ) -> list[StocksModel]:
         raise NotImplementedError
