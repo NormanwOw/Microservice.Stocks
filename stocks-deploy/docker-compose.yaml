@@ -1,0 +1,63 @@
+services:
+  stocks-backend:
+    build:
+      context: ./../
+    image: microservice.stocks:latest
+    restart: unless-stopped
+    volumes:
+      - .env:/app/stocks-deploy/.env
+    ports:
+      - "8001:8000"
+    container_name: microservice.stocks
+    healthcheck:
+      test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/healthy')" ]
+      interval: 200s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    command: bash -c "alembic upgrade head && uvicorn src.main:app --host 0.0.0.0 --port 8000"
+    networks:
+      - kafka-network
+      - stocks-network
+    depends_on:
+      stocks-postgres:
+        condition: service_healthy
+
+  stocks-publisher:
+    image: publisher:latest
+    restart: unless-stopped
+    volumes:
+      - .env-ms-stocks:/app/deploy/.env
+    container_name: publisher.stocks
+    networks:
+      - kafka-network
+      - stocks-network
+    depends_on:
+      stocks-backend:
+        condition: service_healthy
+
+  stocks-postgres:
+    image: postgres:16-alpine
+    restart: always
+    user: "70:70"
+    volumes:
+      - stocks_postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - .env
+    container_name: postgres.stocks
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}" ]
+      interval: 10s
+      timeout: 60s
+      retries: 5
+      start_period: 10s
+    networks:
+      - stocks-network
+
+volumes:
+  stocks_postgres_data: {}
+
+networks:
+  stocks-network: {}
+  kafka-network:
+    external: true

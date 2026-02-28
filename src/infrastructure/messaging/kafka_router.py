@@ -4,7 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from tenacity import AsyncRetrying, RetryError, stop_after_attempt, wait_fixed
 
 from src.application.dispatcher import dispatcher
-from src.infrastructure.logger.impl import logger
+from src.config import settings
 from src.infrastructure.logger.interfaces import ILogger
 from src.infrastructure.messaging.interfaces import IKafkaConsumer
 from src.infrastructure.messaging.messages import CommandMessage
@@ -25,41 +25,48 @@ class KafkaMessageRouter:
                 async for msg in self.consumer:
                     message_schema = CommandMessage(**msg.value)
 
-                    async with self.uow:
-                        try:
-                            await self.uow.processed_messages.add(
-                                ProcessedMessagesModel(id=message_schema.message_id)
-                            )
-                        except IntegrityError:
-                            await self.consumer.commit()
-                            self.logger.info(
-                                f'Skipped already processed message ' f'{message_schema.message_id}'
-                            )
-                            continue
+                    if not settings.DEBUG:
+                        async with self.uow:
+                            try:
+                                await self.uow.processed_messages.add(
+                                    ProcessedMessagesModel(id=message_schema.message_id)
+                                )
+                                await self.uow.commit()
+                            except IntegrityError:
+                                await self.consumer.commit()
+                                self.logger.info(
+                                    f'Skipped already processed message '
+                                    f'{message_schema.message_id}'
+                                )
+                                continue
 
+                    async with self.uow:
                         try:
                             async for attempt in AsyncRetrying(
                                 stop=stop_after_attempt(3), wait=wait_fixed(2)
                             ):
                                 with attempt:
-                                    await dispatcher.dispatch(
-                                        uow=self.uow,
-                                        action=message_schema.action,
-                                        message=msg.value,
-                                    )
-                                    await self.uow.commit()
+                                    try:
+                                        await dispatcher.dispatch(
+                                            uow=self.uow,
+                                            action=message_schema.action,
+                                            message=msg.value,
+                                        )
+                                        await self.uow.commit()
+                                        await self.consumer.commit()
+                                    except Exception:
+                                        await self.uow.rollback()
+                                        raise
                         except RetryError:
-                            logger.error(
+                            self.logger.error(
                                 f'Error while process message: '
                                 f'{message_schema.message_id} | Message: {msg.value}'
                             )
-                            await self.uow.rollback()
-                            await self.uow.processed_messages.add(
-                                ProcessedMessagesModel(id=message_schema.message_id)
+
+                            await self.uow.processed_messages.delete_one(
+                                ProcessedMessagesModel.id, message_schema.message_id
                             )
                             await self.uow.commit()
-                        finally:
-                            await self.consumer.commit()
 
                 await asyncio.sleep(1)
         finally:

@@ -15,7 +15,7 @@ class ReserveProducts:
         self, uow: IUnitOfWork, message: ReserveProductsMessage
     ) -> list[Product] | None:
         products = message.payload.products
-        stocks = await uow.stocks.find(products, with_for_update=True)
+        stocks = await uow.stocks.find_available(products, with_for_update=True)
         if not stocks:
             error_message = 'Products not found or not available'
             await self.order_service_proxy.reserve_failed(
@@ -50,5 +50,6 @@ class ReserveProducts:
                 stock.available -= reserved
                 stock.reserved += reserved
                 reserved_products.append(product)
+                break
 
         return reserved_products

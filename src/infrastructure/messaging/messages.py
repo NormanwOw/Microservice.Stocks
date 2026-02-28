@@ -30,9 +30,13 @@ class CommandMessage(Message):
     external_reference: ExternalReference
 
 
-class ReserveProductsPayload(PydanticBase):
+class ProductsPayload(PydanticBase):
     products: list[Product]
 
 
 class ReserveProductsMessage(CommandMessage):
-    payload: ReserveProductsPayload
+    payload: ProductsPayload
+
+
+class CommitProductsMessage(CommandMessage):
+    payload: ProductsPayload

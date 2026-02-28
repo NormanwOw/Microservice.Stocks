@@ -13,7 +13,19 @@ class IOrderService(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def products_committed(
+        self, uow: IUnitOfWork, products: list[Product], external_reference: ExternalReference
+    ):
+        raise NotImplementedError
+
+    @abstractmethod
     async def reserve_failed(
+        self, uow: IUnitOfWork, error_message: str, external_reference: ExternalReference
+    ):
+        raise NotImplementedError
+
+    @abstractmethod
+    async def commit_failed(
         self, uow: IUnitOfWork, error_message: str, external_reference: ExternalReference
     ):
         raise NotImplementedError
