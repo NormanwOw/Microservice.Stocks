@@ -66,6 +66,7 @@ class KafkaMessageRouter:
                             await self.uow.processed_messages.delete_one(
                                 ProcessedMessagesModel.id, message_schema.message_id
                             )
+                            await self.uow.commit()
 
                 await asyncio.sleep(1)
         finally:
