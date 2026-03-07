@@ -1,11 +1,11 @@
 from src.application.disp_depends import DispDepends
 from src.application.dispatcher import dispatcher
+from src.application.ports.uow import IUnitOfWork
 from src.application.use_cases.commit_products_use_case import CommitProducts
 from src.application.use_cases.reserve_products_use_case import ReserveProducts
 from src.domain.enums import CommandType
 from src.infrastructure.logger.impl import logger
 from src.infrastructure.messaging.messages import CommitProductsMessage, ReserveProductsMessage
-from src.infrastructure.uow.interfaces import IUnitOfWork
 from src.presentation.dependencies.product_dependencies import ProductDependencies
 
 

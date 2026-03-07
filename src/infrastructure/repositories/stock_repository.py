@@ -1,10 +1,10 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.application.ports.repositories import IStockRepository
 from src.domain.entities import Product
 from src.infrastructure.models import StocksModel
 from src.infrastructure.repositories.base_repository import SQLAlchemyRepository
-from src.infrastructure.repositories.interfaces import IStockRepository
 from src.presentation.pagination import Pagination
 
 

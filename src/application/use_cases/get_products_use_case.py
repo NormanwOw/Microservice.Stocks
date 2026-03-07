@@ -1,5 +1,5 @@
+from src.application.ports.uow import IUnitOfWork
 from src.domain.entities import Product
-from src.infrastructure.uow.interfaces import IUnitOfWork
 from src.presentation.pagination import Pagination
 
 

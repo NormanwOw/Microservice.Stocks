@@ -4,8 +4,8 @@ from sqlalchemy import delete, desc, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute
 
+from src.application.ports.repositories import ISQLAlchemyRepository
 from src.infrastructure.models import Base
-from src.infrastructure.repositories.interfaces import ISQLAlchemyRepository
 from src.presentation.pagination import Pagination
 
 T = TypeVar('T', bound=Base)

@@ -1,9 +1,10 @@
-from src.infrastructure.repositories.interfaces import (
+from src.application.ports.repositories import (
     IOutboxRepository,
     IProcessedMessagesModelRepository,
     IProductRepository,
     IStockRepository,
 )
+from src.application.ports.uow import IUnitOfWork
 from src.infrastructure.repositories.outbox_repository import OutboxRepository
 from src.infrastructure.repositories.processed_message_repository import (
     ProcessedMessagesModelRepository,
@@ -11,7 +12,6 @@ from src.infrastructure.repositories.processed_message_repository import (
 from src.infrastructure.repositories.product_repository import ProductRepository
 from src.infrastructure.repositories.stock_repository import StockRepository
 from src.infrastructure.session import async_session
-from src.infrastructure.uow.interfaces import IUnitOfWork
 
 
 class UnitOfWork(IUnitOfWork):

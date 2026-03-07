@@ -1,10 +1,10 @@
+from src.application.ports.logger import ILogger
+from src.application.ports.services import IOrderService
+from src.application.ports.uow import IUnitOfWork
 from src.domain.entities import Product
 from src.domain.exceptions import NotEnoughReserveProductsException, NotEnoughTotalProductsException
-from src.infrastructure.logger.interfaces import ILogger
 from src.infrastructure.messaging.messages import CommitProductsMessage
 from src.infrastructure.models import StocksModel
-from src.infrastructure.services.interfaces import IOrderService
-from src.infrastructure.uow.interfaces import IUnitOfWork
 
 
 class CommitProducts:

@@ -1,10 +1,10 @@
+from src.application.ports.services import IOrderService
+from src.application.ports.uow import IUnitOfWork
 from src.config import Settings
 from src.domain.entities import Product
 from src.domain.enums import EventType
 from src.infrastructure.messaging.messages import ExternalReference
 from src.infrastructure.models import OutboxModel
-from src.infrastructure.services.interfaces import IOrderService
-from src.infrastructure.uow.interfaces import IUnitOfWork
 
 
 class OrderServiceProxy(IOrderService):
