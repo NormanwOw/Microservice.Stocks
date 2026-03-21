@@ -25,25 +25,38 @@ class StockRepository(SQLAlchemyRepository, IStockRepository):
     async def find_available(
         self, products: list[Product], with_for_update: bool = False
     ) -> list[StocksModel]:
-        stmt = select(StocksModel).where(
+        query = select(StocksModel).where(
             StocksModel.product_id.in_([product.id for product in products]),
             StocksModel.available > 0,
         )
         if with_for_update:
-            stmt = stmt.with_for_update()
+            query = query.with_for_update()
 
-        res = await self.__session.scalars(stmt)
+        res = await self.__session.scalars(query)
         return list(res.all())
 
     async def find_total(
         self, products: list[Product], with_for_update: bool = False
     ) -> list[StocksModel]:
-        stmt = select(StocksModel).where(
+        query = select(StocksModel).where(
             StocksModel.product_id.in_([product.id for product in products]),
             StocksModel.total > 0,
         )
         if with_for_update:
-            stmt = stmt.with_for_update()
+            query = query.with_for_update()
 
-        res = await self.__session.scalars(stmt)
+        res = await self.__session.scalars(query)
+        return list(res.all())
+
+    async def find_by_products(
+        self, products: list[Product], with_for_update: bool = False
+    ) -> list[StocksModel]:
+        if not products:
+            return []
+        query = select(StocksModel).filter(
+            StocksModel.product_id.in_([product.id for product in products])
+        )
+        if with_for_update:
+            query = query.with_for_update()
+        res = await self.__session.scalars(query)
         return list(res.all())
