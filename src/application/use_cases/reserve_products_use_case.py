@@ -1,8 +1,14 @@
 from src.application.ports.logger import ILogger
 from src.application.ports.services import IOrderService
 from src.application.ports.uow import IUnitOfWork
+from src.config import SERVICE_NAME
 from src.domain.entities import Product
-from src.infrastructure.messaging.messages import ReserveProductsMessage
+from src.domain.enums import EventType
+from src.infrastructure.messaging.messages import (
+    FailedEventPayload,
+    FailedMessage,
+    ReserveProductsMessage,
+)
 from src.infrastructure.models import StocksModel
 
 
@@ -18,13 +24,7 @@ class ReserveProducts:
         stocks = await uow.stocks.find_available(products, with_for_update=True)
         if not stocks:
             error_message = 'Products not found or not available'
-            await self.order_service_proxy.reserve_failed(
-                uow=uow, error_message=error_message, external_reference=message.external_reference
-            )
-            self.logger.warning(
-                error_message + f' | Products: {products}, '
-                f'Command message id: {message.message_id}'
-            )
+            await self.fail(uow, message, error_message)
             return
         reserved_products = await self.reserve(stocks, products)
         await self.order_service_proxy.products_reserved(
@@ -53,3 +53,20 @@ class ReserveProducts:
                 break
 
         return reserved_products
+
+    async def fail(self, uow: IUnitOfWork, message: ReserveProductsMessage, error_message: str):
+        failed_message = FailedMessage(
+            action=EventType.RESERVE_FAILED,
+            producer=SERVICE_NAME,
+            external_reference=message.external_reference,
+            payload=FailedEventPayload(
+                failed_event=EventType.PRODUCTS_COMMITTED, error_message=error_message
+            ),
+        )
+
+        await self.order_service_proxy.action_failed(uow, failed_message)
+
+        self.logger.warning(
+            f'{error_message} | Products: {message.payload.products}, '
+            f'Command message id: {message.message_id}'
+        )

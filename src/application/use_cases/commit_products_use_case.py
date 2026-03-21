@@ -1,9 +1,19 @@
 from src.application.ports.logger import ILogger
 from src.application.ports.services import IOrderService
 from src.application.ports.uow import IUnitOfWork
+from src.config import SERVICE_NAME
 from src.domain.entities import Product
-from src.domain.exceptions import NotEnoughReserveProductsException, NotEnoughTotalProductsException
-from src.infrastructure.messaging.messages import CommitProductsMessage
+from src.domain.enums import EventType
+from src.domain.exceptions import (
+    DomainException,
+    NotEnoughReserveProductsException,
+    NotEnoughTotalProductsException,
+)
+from src.infrastructure.messaging.messages import (
+    CommitProductsMessage,
+    FailedEventPayload,
+    FailedMessage,
+)
 from src.infrastructure.models import StocksModel
 
 
@@ -15,17 +25,25 @@ class CommitProducts:
     async def __call__(self, uow: IUnitOfWork, message: CommitProductsMessage):
         products = message.payload.products
         stocks = await uow.stocks.find_total(products, with_for_update=True)
+
         if not stocks:
-            error_message = 'Products not found or not available'
-            await self.order_service_proxy.commit_failed(
-                uow=uow, error_message=error_message, external_reference=message.external_reference
-            )
-            self.logger.warning(
-                error_message + f' | Products: {products}, '
-                f'Command message id: {message.message_id}'
+            await self.fail(
+                uow=uow,
+                message=message,
+                error_message='Products not found or not available',
             )
             return
-        committed_products = await self.commit(stocks, products)
+
+        try:
+            committed_products = await self.commit(stocks, products)
+        except DomainException as ex:
+            await self.fail(
+                uow=uow,
+                message=message,
+                error_message=ex.error_message,
+            )
+            return
+
         await self.order_service_proxy.products_committed(
             uow, committed_products, message.external_reference
         )
@@ -53,3 +71,25 @@ class CommitProducts:
                 committed_products.append(product)
 
         return committed_products
+
+    async def fail(
+        self,
+        uow: IUnitOfWork,
+        message: CommitProductsMessage,
+        error_message: str,
+    ):
+        failed_message = FailedMessage(
+            action=EventType.COMMIT_FAILED,
+            producer=SERVICE_NAME,
+            external_reference=message.external_reference,
+            payload=FailedEventPayload(
+                failed_event=EventType.PRODUCTS_COMMITTED, error_message=error_message
+            ),
+        )
+
+        await self.order_service_proxy.action_failed(uow, failed_message)
+
+        self.logger.warning(
+            f'{error_message} | Products: {message.payload.products}, '
+            f'Command message id: {message.message_id}'
+        )

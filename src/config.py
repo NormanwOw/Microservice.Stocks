@@ -26,3 +26,4 @@ DATABASE_URL = (
 )
 
 VERSION = 1
+SERVICE_NAME = 'stocks-service'
