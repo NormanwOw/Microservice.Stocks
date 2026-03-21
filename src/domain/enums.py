@@ -9,6 +9,7 @@ class Currency(str, Enum):
 class CommandType(str, Enum):
     RESERVE_PRODUCTS = 'ReserveProducts'
     COMMIT_PRODUCTS = 'CommitProducts'
+    CANCEL_RESERVE = 'CancelReserve'
 
 
 class EventType(str, Enum):
