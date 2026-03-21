@@ -1,5 +1,5 @@
+from src.application.ports.uow import IUnitOfWork
 from src.infrastructure.models import ProductsModel, StocksModel
-from src.infrastructure.uow.interfaces import IUnitOfWork
 from src.presentation.schemas import AddProductSchema
 
 

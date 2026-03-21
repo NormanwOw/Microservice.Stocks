@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Response
 from fastapi.params import Depends
 
-from src.application.use_cases.add_products import AddProducts
+from src.application.use_cases.add_products_use_case import AddProducts
 from src.application.use_cases.get_products_use_case import GetProducts
 from src.config import VERSION
 from src.domain.entities import Product

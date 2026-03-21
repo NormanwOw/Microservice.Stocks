@@ -1,11 +1,16 @@
 from src.application.disp_depends import DispDepends
 from src.application.dispatcher import dispatcher
+from src.application.ports.uow import IUnitOfWork
+from src.application.use_cases.cancel_reserve_use_case import CancelReserveProducts
 from src.application.use_cases.commit_products_use_case import CommitProducts
 from src.application.use_cases.reserve_products_use_case import ReserveProducts
 from src.domain.enums import CommandType
 from src.infrastructure.logger.impl import logger
-from src.infrastructure.messaging.messages import CommitProductsMessage, ReserveProductsMessage
-from src.infrastructure.uow.interfaces import IUnitOfWork
+from src.infrastructure.messaging.messages import (
+    CancelReserveProductsMessage,
+    CommitProductsMessage,
+    ReserveProductsMessage,
+)
 from src.presentation.dependencies.product_dependencies import ProductDependencies
 
 
@@ -34,5 +39,19 @@ async def commit_products_handler(
     committed_products = await commit_products(uow, msg)
     logger.info(
         f'Successfully committed products: {committed_products}, '
+        f'Command message id: {msg.message_id}'
+    )
+
+
+@dispatcher.register(CommandType.CANCEL_RESERVE)
+async def cancel_reserve_handler(
+    uow: IUnitOfWork,
+    message: dict,
+    cancel_reserve: CancelReserveProducts = DispDepends(ProductDependencies.cancel_reserve),
+):
+    msg = CancelReserveProductsMessage(**message)
+    await cancel_reserve(uow, msg)
+    logger.info(
+        f'Cancelled reserve for order {msg.external_reference.id}, '
         f'Command message id: {msg.message_id}'
     )

@@ -1,7 +1,7 @@
 import logging
 from logging.handlers import RotatingFileHandler
 
-from src.infrastructure.logger.interfaces import ILogger
+from src.application.ports.logger import ILogger
 
 
 class Logger(ILogger):

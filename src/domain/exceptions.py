@@ -1,7 +1,8 @@
 from uuid import UUID
 
 
-class DomainException(Exception): ...
+class DomainException(Exception):
+    error_message: str
 
 
 class NotEnoughReserveProductsException(DomainException):
@@ -9,6 +10,7 @@ class NotEnoughReserveProductsException(DomainException):
         self.product_id = product_id
         self.product_qty = product_qty
         self.reserved = reserved
+        self.error_message = 'Not enough reserve products'
 
 
 class NotEnoughTotalProductsException(DomainException):
@@ -16,3 +18,4 @@ class NotEnoughTotalProductsException(DomainException):
         self.product_id = product_id
         self.product_qty = product_qty
         self.total = total
+        self.error_message = 'Not enough total products'

@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 
+from src.application.ports.uow import IUnitOfWork
 from src.domain.entities import Product
-from src.infrastructure.messaging.messages import ExternalReference
-from src.infrastructure.uow.interfaces import IUnitOfWork
+from src.infrastructure.messaging.messages import ExternalReference, FailedMessage
 
 
 class IOrderService(ABC):
@@ -19,13 +19,5 @@ class IOrderService(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def reserve_failed(
-        self, uow: IUnitOfWork, error_message: str, external_reference: ExternalReference
-    ):
-        raise NotImplementedError
-
-    @abstractmethod
-    async def commit_failed(
-        self, uow: IUnitOfWork, error_message: str, external_reference: ExternalReference
-    ):
+    async def action_failed(self, uow: IUnitOfWork, message: FailedMessage):
         raise NotImplementedError

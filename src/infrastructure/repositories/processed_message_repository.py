@@ -1,8 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.application.ports.repositories import IProcessedMessagesModelRepository
 from src.infrastructure.models import ProcessedMessagesModel
 from src.infrastructure.repositories.base_repository import SQLAlchemyRepository
-from src.infrastructure.repositories.interfaces import IProcessedMessagesModelRepository
 
 
 class ProcessedMessagesModelRepository(SQLAlchemyRepository, IProcessedMessagesModelRepository):

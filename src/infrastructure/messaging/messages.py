@@ -25,6 +25,15 @@ class EventMessage(Message):
     external_reference: ExternalReference
 
 
+class FailedEventPayload(PydanticBase):
+    failed_event: EventType
+    error_message: str
+
+
+class FailedMessage(EventMessage):
+    payload: FailedEventPayload
+
+
 class CommandMessage(Message):
     action: CommandType
     external_reference: ExternalReference
@@ -39,4 +48,8 @@ class ReserveProductsMessage(CommandMessage):
 
 
 class CommitProductsMessage(CommandMessage):
+    payload: ProductsPayload
+
+
+class CancelReserveProductsMessage(CommandMessage):
     payload: ProductsPayload

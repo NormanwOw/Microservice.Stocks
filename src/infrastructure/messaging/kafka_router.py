@@ -4,12 +4,12 @@ from sqlalchemy.exc import IntegrityError
 from tenacity import AsyncRetrying, RetryError, stop_after_attempt, wait_fixed
 
 from src.application.dispatcher import dispatcher
+from src.application.ports.broker import IKafkaConsumer
+from src.application.ports.logger import ILogger
+from src.application.ports.uow import IUnitOfWork
 from src.config import settings
-from src.infrastructure.logger.interfaces import ILogger
-from src.infrastructure.messaging.interfaces import IKafkaConsumer
 from src.infrastructure.messaging.messages import CommandMessage
 from src.infrastructure.models import ProcessedMessagesModel
-from src.infrastructure.uow.interfaces import IUnitOfWork
 
 
 class KafkaMessageRouter:
@@ -22,52 +22,55 @@ class KafkaMessageRouter:
         await self.consumer.start()
         try:
             while True:
-                async for msg in self.consumer:
-                    message_schema = CommandMessage(**msg.value)
+                try:
+                    async for msg in self.consumer:
+                        message_schema = CommandMessage(**msg.value)
 
-                    if not settings.DEBUG:
+                        if not settings.DEBUG:
+                            async with self.uow:
+                                try:
+                                    await self.uow.processed_messages.add(
+                                        ProcessedMessagesModel(id=message_schema.message_id)
+                                    )
+                                    await self.uow.commit()
+                                except IntegrityError:
+                                    await self.consumer.commit()
+                                    self.logger.info(
+                                        f'Skipped already processed message '
+                                        f'{message_schema.message_id}'
+                                    )
+                                    continue
+
                         async with self.uow:
                             try:
-                                await self.uow.processed_messages.add(
-                                    ProcessedMessagesModel(id=message_schema.message_id)
+                                async for attempt in AsyncRetrying(
+                                    stop=stop_after_attempt(3), wait=wait_fixed(2)
+                                ):
+                                    with attempt:
+                                        try:
+                                            await dispatcher.dispatch(
+                                                uow=self.uow,
+                                                action=message_schema.action,
+                                                message=msg.value,
+                                            )
+                                            await self.uow.commit()
+                                            await self.consumer.commit()
+                                        except Exception:
+                                            await self.uow.rollback()
+                                            raise
+                            except RetryError:
+                                self.logger.error(
+                                    f'Error while process message: '
+                                    f'{message_schema.message_id} | Message: {msg.value}'
+                                )
+
+                                await self.uow.processed_messages.delete_one(
+                                    ProcessedMessagesModel.id, message_schema.message_id
                                 )
                                 await self.uow.commit()
-                            except IntegrityError:
-                                await self.consumer.commit()
-                                self.logger.info(
-                                    f'Skipped already processed message '
-                                    f'{message_schema.message_id}'
-                                )
-                                continue
-
-                    async with self.uow:
-                        try:
-                            async for attempt in AsyncRetrying(
-                                stop=stop_after_attempt(3), wait=wait_fixed(2)
-                            ):
-                                with attempt:
-                                    try:
-                                        await dispatcher.dispatch(
-                                            uow=self.uow,
-                                            action=message_schema.action,
-                                            message=msg.value,
-                                        )
-                                        await self.uow.commit()
-                                        await self.consumer.commit()
-                                    except Exception:
-                                        await self.uow.rollback()
-                                        raise
-                        except RetryError:
-                            self.logger.error(
-                                f'Error while process message: '
-                                f'{message_schema.message_id} | Message: {msg.value}'
-                            )
-
-                            await self.uow.processed_messages.delete_one(
-                                ProcessedMessagesModel.id, message_schema.message_id
-                            )
-                            await self.uow.commit()
-
+                except Exception:
+                    self.logger.error('Unexpected error')
+                    await asyncio.sleep(60)
                 await asyncio.sleep(1)
         finally:
             await self.consumer.stop()

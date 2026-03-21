@@ -70,3 +70,9 @@ class IStockRepository(ISQLAlchemyRepository, ABC):
         self, products: list[Product], with_for_update: bool = False
     ) -> list[StocksModel]:
         raise NotImplementedError
+
+    @abstractmethod
+    async def find_by_products(
+        self, products: list[Product], with_for_update: bool = False
+    ) -> list[StocksModel]:
+        raise NotImplementedError

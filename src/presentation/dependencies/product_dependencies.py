@@ -1,4 +1,5 @@
-from src.application.use_cases.add_products import AddProducts
+from src.application.use_cases.add_products_use_case import AddProducts
+from src.application.use_cases.cancel_reserve_use_case import CancelReserveProducts
 from src.application.use_cases.commit_products_use_case import CommitProducts
 from src.application.use_cases.get_products_use_case import GetProducts
 from src.application.use_cases.reserve_products_use_case import (
@@ -28,3 +29,7 @@ class ProductDependencies:
     @classmethod
     async def commit_products(cls):
         return CommitProducts(cls.order_service_proxy, logger)
+
+    @classmethod
+    async def cancel_reserve(cls):
+        return CancelReserveProducts()
